@@ -97,7 +97,7 @@ public class Register extends AppCompatActivity {
                             progressDialog.dismiss();
                             FirebaseUser user = mAuth.getCurrentUser();
                             //Toast.makeText(Register.this, "Authentication failed..\n"+user.getEmail(),
-                            startActivity(new Intent(Register.this, Post.class ));
+                            startActivity(new Intent(Register.this, home.class ));
                             //finish();
 
                         } else {
