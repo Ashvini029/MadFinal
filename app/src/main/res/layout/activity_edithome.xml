@@ -18,7 +18,11 @@
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
         android:layout_marginBottom="8dp"
+<<<<<<< HEAD
         android:src="@drawable/ic_action_addpic"
+=======
+        android:src="@drawable/profile"
+>>>>>>> origin/master
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.582"
