@@ -2,6 +2,7 @@ package com.example.project;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -13,6 +14,8 @@ import android.content.ContentValues;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -39,7 +42,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
+import com.squareup.picasso.Picasso;
 
+import java.io.ByteArrayOutputStream;
 import java.util.HashMap;
 
 public class Post extends AppCompatActivity {
@@ -60,17 +65,52 @@ public class Post extends AppCompatActivity {
 
     ProgressDialog pd;
 
-    String name,email,uid,dp;
+    String name,email,uid,dp,pId;
+
+    ActionBar actionBar;
+
+
+    //edit
+    String editDisc, editImage;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_post);
 
-        firebaseAuth = FirebaseAuth.getInstance();
+        actionBar = getSupportActionBar();
+        actionBar.setTitle("Add Post");
+
+        actionBar.setDisplayShowHomeEnabled(true);
+        actionBar.setDefaultDisplayHomeAsUpEnabled(true);
 
         newPostBtn = findViewById(R.id.addImage);
         newPostDesc = findViewById(R.id.addDes);
         post = findViewById(R.id.addPost);
+
+        //get data from previous activity
+        Intent intent = getIntent();
+        final String isUpdateKey = ""+intent.getStringExtra("key");
+        final String editPostId = ""+intent.getStringExtra("editPostId");
+        //validation
+        if (isUpdateKey.equals("editPost")){
+
+            actionBar.setTitle("Update Post");
+            post.setText("Update");
+            loadPostData(editPostId);
+
+        }
+        else {
+            actionBar.setTitle("Add new Post");
+            post.setText("Post");
+
+        }
+
+
+        firebaseAuth = FirebaseAuth.getInstance();
+
+
 
         pd = new ProgressDialog(this);
 
@@ -114,13 +154,16 @@ public class Post extends AppCompatActivity {
                     return;
 
                 }
-                if (image_rui == null){
-                    //post without image
-                    uploadData(dis, "NoImage");
+                if (isUpdateKey.equals("editPost")){
+                    //actionBar.setTitle("Update Post");
+                    beginUpdate(dis, editPostId);
                 }
-                else{
-                    uploadData(dis, String.valueOf(image_rui));
+                else {
+                    uploadData(dis);
+
                 }
+
+
 
 
             }
@@ -128,7 +171,266 @@ public class Post extends AppCompatActivity {
 
     }
 
-    private void uploadData(final String dis, String uri) {
+    private void beginUpdate(String dis, String editPostId) {
+        pd.setMessage("Updating Post...");
+        pd.show();
+
+         if (!editImage.equals("noImage")){
+             //withImage
+             updateWasWithImage(dis,editPostId);
+
+         }
+         else if(newPostBtn.getDrawable() != null) {
+             //with image
+             updateWithNoImage(dis,editPostId);
+
+         }
+         else {
+             //without image
+             updateWithoutImaage(dis, editPostId);
+
+
+         }
+
+    }
+
+    private void updateWithoutImaage(String dis, String editPostId) {
+        HashMap<String, Object> hashMap = new HashMap<>();
+        hashMap.put("uid",uid );
+        hashMap.put("uName",name );
+        hashMap.put("uEmail",email );
+        hashMap.put("uDp",dp );
+        hashMap.put("pDiesc",dis );
+        hashMap.put("pImage","noImage" );
+
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Posts");
+        ref.child(editPostId)
+                .updateChildren(hashMap)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        pd.dismiss();
+                        Toast.makeText(Post.this, "Updated..", Toast.LENGTH_SHORT).show();
+
+
+
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
+
+
+    }
+
+    private void updateWithNoImage(final String dis, final String editPostId) {
+        String timeStamp = String.valueOf(System.currentTimeMillis());
+        String filePathAndName = "Posts/"+"post_"+timeStamp;
+
+        //get image from imageView
+        Bitmap bitmap = ((BitmapDrawable)newPostBtn.getDrawable()).getBitmap();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        //image compress
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+        byte[] data = baos.toByteArray();
+
+        StorageReference ref = FirebaseStorage.getInstance().getReference().child(filePathAndName);
+        ref.putBytes(data)
+                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                    @Override
+                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                        //image upload get it uri
+                        Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
+                        while (!uriTask.isSuccessful());
+
+                        String downloadUri = uriTask.getResult().toString();
+                        if (!uriTask.isSuccessful()){
+                            //uri rev, upload to databse
+                            HashMap<String, Object> hashMap = new HashMap<>();
+                            hashMap.put("uid",uid );
+                            hashMap.put("uName",name );
+                            hashMap.put("uEmail",email );
+                            hashMap.put("uDp",dp );
+                            hashMap.put("pDiesc",dis );
+                            hashMap.put("pImage",downloadUri );
+
+                            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Posts");
+                            ref.child(editPostId)
+                                    .updateChildren(hashMap)
+                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                        @Override
+                                        public void onSuccess(Void aVoid) {
+                                            pd.dismiss();
+                                            Toast.makeText(Post.this, "Updated..", Toast.LENGTH_SHORT).show();
+
+
+
+
+                                        }
+                                    })
+                                    .addOnFailureListener(new OnFailureListener() {
+                                        @Override
+                                        public void onFailure(@NonNull Exception e) {
+                                            Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                                        }
+                                    });
+
+                        }
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //image not uploaded
+                        pd.dismiss();
+                        Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+
+
+                    }
+                });
+
+    }
+
+    private void updateWasWithImage(final String dis, final String editPostId) {
+        //del prev image
+        StorageReference mPictureRef = FirebaseStorage.getInstance().getReferenceFromUrl(editImage);
+        mPictureRef.delete()
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        //image deleted, upload new image
+                        String timeStamp = String.valueOf(System.currentTimeMillis());
+                        String filePathAndName = "Posts/"+"post_"+timeStamp;
+
+                        //get image from imageView
+                        Bitmap bitmap = ((BitmapDrawable)newPostBtn.getDrawable()).getBitmap();
+                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                        //image compress
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+                        byte[] data = baos.toByteArray();
+
+                        StorageReference ref = FirebaseStorage.getInstance().getReference().child(filePathAndName);
+                        ref.putBytes(data)
+                                .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                                    @Override
+                                    public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                            //image upload get it uri
+                                        Task<Uri> uriTask = taskSnapshot.getStorage().getDownloadUrl();
+                                        while (!uriTask.isSuccessful());
+
+                                        String downloadUri = uriTask.getResult().toString();
+                                        if (!uriTask.isSuccessful()){
+                                            //uri rev, upload to databse
+                                            HashMap<String, Object> hashMap = new HashMap<>();
+                                            hashMap.put("uid",uid );
+                                            hashMap.put("uName",name );
+                                            hashMap.put("uEmail",email );
+                                            hashMap.put("uDp",dp );
+                                            hashMap.put("pDiesc",dis );
+                                            hashMap.put("pImage",downloadUri );
+
+                                            DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Posts");
+                                            ref.child(editPostId)
+                                                    .updateChildren(hashMap)
+                                                    .addOnSuccessListener(new OnSuccessListener<Void>() {
+                                                        @Override
+                                                        public void onSuccess(Void aVoid) {
+                                                            pd.dismiss();
+                                                            Toast.makeText(Post.this, "Updated..", Toast.LENGTH_SHORT).show();
+
+
+
+
+                                                        }
+                                                    })
+                                                    .addOnFailureListener(new OnFailureListener() {
+                                                        @Override
+                                                        public void onFailure(@NonNull Exception e) {
+                                                            Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                                                        }
+                                                    });
+
+                                        }
+
+                                    }
+                                })
+                                .addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception e) {
+                                        //image not uploaded
+                                        pd.dismiss();
+                                        Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+
+
+                                    }
+                                });
+
+
+
+
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        pd.dismiss();
+                        Toast.makeText(Post.this, ""+e.getMessage(), Toast.LENGTH_SHORT).show();
+
+                    }
+                });
+
+        
+    }
+
+    private void loadPostData(String editPostId) {
+      DatabaseReference reference = FirebaseDatabase.getInstance().getReference("Posts");
+      //get post data
+        Query fquery = reference.orderByChild("pId").equalTo(editPostId);
+        fquery.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                for (DataSnapshot ds: dataSnapshot.getChildren()){
+                    editDisc = ""+ds.child("pDiesc").getValue();
+                    editImage = ""+ds.child("pImage").getValue();
+
+                    newPostDesc.setText(editDisc);
+
+                    if (editImage.equals("noImage")){
+                        try {
+
+                            Picasso.get().load(editImage).into(newPostBtn);
+
+
+                        }
+                        catch (Exception e){
+
+                        }
+                    }
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }
+
+    private void uploadData(final String dis ) {
         pd.setMessage("Publishing Post...");
         pd.show();
 
@@ -136,10 +438,18 @@ public class Post extends AppCompatActivity {
 
         String filePathAndName = "Posts/" + "post_" + timeStamp;
 
-        if (!uri.equals("NoImage")){
+        if (newPostBtn.getDrawable() != null){
+            //get image from imageView
+            Bitmap bitmap = ((BitmapDrawable)newPostBtn.getDrawable()).getBitmap();
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            //image compress
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte[] data = baos.toByteArray();
+
+
             //with image
             StorageReference ref = FirebaseStorage.getInstance().getReference().child(filePathAndName);
-            ref.putFile(Uri.parse(uri))
+            ref.putBytes(data)
                     .addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                         @Override
                         public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -155,7 +465,7 @@ public class Post extends AppCompatActivity {
                                 hashmap.put("uName",name );
                                 hashmap.put("uEmail",email );
                                 hashmap.put("uDp",dp );
-                                hashmap.put("pId",timeStamp );
+                                hashmap.put("pId",pId );
                                 hashmap.put("pDiesc",dis );
                                 hashmap.put("pImage",downloadUri );
                                 hashmap.put("pTime",timeStamp );
@@ -199,7 +509,7 @@ public class Post extends AppCompatActivity {
             hashmap.put("uDp",dp );
             hashmap.put("pId",timeStamp );
             hashmap.put("pDiesc",dis );
-            hashmap.put("pImage","noImage ");
+            hashmap.put("pImage","noImage");
             hashmap.put("pTime",timeStamp );
             //path to store data
             DatabaseReference ref = FirebaseDatabase.getInstance().getReference("Posts");
@@ -209,10 +519,14 @@ public class Post extends AppCompatActivity {
                         public void onSuccess(Void aVoid) {
                             pd.dismiss();
                             Toast.makeText(Post.this, "Post published", Toast.LENGTH_SHORT).show();
+
                             newPostDesc.setText("");
                             newPostBtn.setImageURI(null);
                             image_rui = null;
+
                             startActivity(new Intent(Post.this, Dashboard.class ));
+
+
                         }
                     })
                     .addOnFailureListener(new OnFailureListener() {
@@ -223,11 +537,13 @@ public class Post extends AppCompatActivity {
                         }
                     });
 
+
+
         }
     }
 
     private void showImagePickDialog() {
-        String[] option = {"Camera", "Galeery"};
+        String[] option = {"Camera", "Gallery"};
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("Choose Image from");
 

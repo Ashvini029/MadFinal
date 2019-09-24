@@ -20,6 +20,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 
 public class Register extends AppCompatActivity {
     EditText nEmail, nPwd;
@@ -96,6 +100,23 @@ public class Register extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             progressDialog.dismiss();
                             FirebaseUser user = mAuth.getCurrentUser();
+                            String email = user.getEmail();
+                            String Uid = user.getUid();
+
+                            HashMap<Object, String> hashMap = new HashMap<>();
+                            hashMap.put("email", email);
+                            hashMap.put("uid", Uid);
+                            hashMap.put("name", "");
+                            hashMap.put("image", "");
+
+                            FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+                            DatabaseReference reference = database.getReference("Users");
+                            reference.child(Uid).setValue(hashMap);
+
+
+
+
                             //Toast.makeText(Register.this, "Authentication failed..\n"+user.getEmail(),
                             startActivity(new Intent(Register.this, home.class ));
                             //finish();

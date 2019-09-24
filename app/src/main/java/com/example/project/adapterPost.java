@@ -2,6 +2,7 @@ package com.example.project;
 
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.os.Build;
 import android.text.format.DateFormat;
 import android.view.Gravity;
@@ -26,6 +27,7 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
@@ -43,10 +45,17 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
     List<ModelPost> postList;
     String myUid;
 
+    private DatabaseReference likesRef;
+    private DatabaseReference postRef1;
+
+    boolean mProcessLike = false;
+
     public adapterPost(Context context, List<ModelPost> postList) {
         this.context = context;
         this.postList = postList;
         myUid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        likesRef = FirebaseDatabase.getInstance().getReference().child("Likes");
+        postRef1 = FirebaseDatabase.getInstance().getReference().child("Posts");
     }
 
     @NonNull
@@ -60,15 +69,16 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
     }
 
     @Override
-    public void onBindViewHolder(@NonNull final MyHolder holder, int position) {
+    public void onBindViewHolder(@NonNull final MyHolder holder, final int position) {
         final String uid = postList.get(position).getUid();
-        String uEmail = postList.get(position).getuEmail();
+        //String uEmail = postList.get(position).getuEmail();
         String uName = postList.get(position).getuName();
         String uDp = postList.get(position).getuDp();
         final String pId = postList.get(position).getpId();
         String pDesc = postList.get(position).getpDiesc();
         final String pImage = postList.get(position).getpImage();
         String pTimeStamp = postList.get(position).getpTime();
+        String pLikes = postList.get(position).getpLikes();
 
         Calendar calendar = Calendar.getInstance(Locale.getDefault());
         calendar.setTimeInMillis(Long.parseLong(pTimeStamp));
@@ -77,6 +87,9 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
         holder.uName.setText(uName);
         holder.pTime.setText(pTime);
         holder.Pdesc.setText(pDesc);
+        holder.Plike.setText(pLikes +"Likes");
+
+       // setLikes(holder, pId);
 
         try {
             Picasso.get().load(uDp).placeholder(R.drawable.ic_action_image).into(holder.uPicture);
@@ -107,13 +120,46 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
                 showMoreOptions(holder.moreBtn, uid, myUid, pId, pImage);
             }
         });
-        holder.likeBtn.setOnClickListener(new View.OnClickListener() {
+       /* holder.likeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Toast.makeText(context, "Like", Toast.LENGTH_SHORT).show();
+                final int pLikes = Integer.parseInt(postList.get(position).getpLikes());
+                mProcessLike = true;
+
+                final String postIde = postList.get(position).getpId();
+
+                likesRef.addValueEventListener(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                        if (mProcessLike){
+                            if (dataSnapshot.child(postIde).hasChild(myUid)){
+                                //remove liked
+                                postRef1.child(postIde).child("pLikes").setValue(""+(pLikes-1));
+                                likesRef.child(postIde).child(myUid).removeValue();
+                                mProcessLike = false;
+
+                            }
+                            else {
+                                //like
+                                postRef1.child(postIde).child("pLikes").setValue(""+(pLikes+1));
+                                likesRef.child(postIde).child(myUid).setValue("Liked");
+                                mProcessLike = false;
+
+
+                            }
+
+                        }
+
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError databaseError) {
+
+                    }
+                });
 
             }
-        });
+        });*/
 
         holder.comBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -132,6 +178,35 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
 
     }
 
+   /* private void setLikes(final MyHolder myholder, final String postkey) {
+        likesRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
+                if (dataSnapshot.child(postkey).hasChild(myUid)){
+
+                    //user has liked this post
+                    myholder.likeBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_liked, 0,0,0);
+                    myholder.likeBtn.setText("Liked");
+
+                }
+                else{
+                    //user has not liked this post
+                    myholder.likeBtn.setCompoundDrawablesWithIntrinsicBounds(R.drawable.ic_action_like, 0,0,0);
+                    myholder.likeBtn.setText("Like");
+
+
+                }
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError databaseError) {
+
+            }
+        });
+
+
+    }*/
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void showMoreOptions(ImageButton moreBtn, String uid, String myUid, final String pId, final String pImage) {
 
@@ -140,6 +215,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
        if (uid.equals(myUid)){
 
         popupMenu.getMenu().add(Menu.NONE,0,0, "Delete" );
+        popupMenu.getMenu().add(Menu.NONE,1,0, "Edit" );
 
     }
     popupMenu.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
@@ -149,6 +225,15 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
            if (id == 0){
                
                beginDelete(pId, pImage);
+
+           }
+           else if (id ==1){
+               //edit
+               Intent intent = new Intent(context, Post.class);
+               intent.putExtra("key", "editPost");
+               intent.putExtra("editPostId", pId);
+               context.startActivity(intent);
+
 
            }
 
@@ -163,7 +248,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
     private void beginDelete(String pId, String pImage) {
         if (pImage.equals("noImage")){
 
-            deleteWithoutImage(pId);
+            deleteWithImage(pId,pImage);
 
         }
         else{

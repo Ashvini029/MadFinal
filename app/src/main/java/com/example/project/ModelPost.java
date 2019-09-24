@@ -1,16 +1,17 @@
 package com.example.project;
 
 public class ModelPost {
-    String pId, pDiesc , pImage,pTime, uid, uEmail, uDp,uName;
+    String pId, pDiesc ,pLikes, pImage,pTime, uid, uEmail, uDp,uName;
 
 
     public ModelPost(){
 
     }
 
-    public ModelPost(String pId, String pDiesc, String pImage, String pTime, String uid, String uEmail, String uDp, String uName) {
+    public ModelPost(String pId, String pDiesc, String pLikes, String pImage, String pTime, String uid, String uEmail, String uDp, String uName) {
         this.pId = pId;
         this.pDiesc = pDiesc;
+        this.pLikes = pLikes;
         this.pImage = pImage;
         this.pTime = pTime;
         this.uid = uid;
@@ -33,6 +34,14 @@ public class ModelPost {
 
     public void setpDiesc(String pDiesc) {
         this.pDiesc = pDiesc;
+    }
+
+    public String getpLikes() {
+        return pLikes;
+    }
+
+    public void setpLikes(String pLikes) {
+        this.pLikes = pLikes;
     }
 
     public String getpImage() {

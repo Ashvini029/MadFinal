@@ -40,6 +40,7 @@ public class myprofile extends AppCompatActivity {
         textViewdob = findViewById(R.id.textViewdob);
         buttondel = findViewById(R.id.buttondelete);
 
+
         buttondel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
