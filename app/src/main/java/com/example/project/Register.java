@@ -118,7 +118,7 @@ public class Register extends AppCompatActivity {
 
 
                             //Toast.makeText(Register.this, "Authentication failed..\n"+user.getEmail(),
-                            startActivity(new Intent(Register.this, home.class ));
+                            startActivity(new Intent(Register.this, Dashboard.class ));
                             //finish();
 
                         } else {
