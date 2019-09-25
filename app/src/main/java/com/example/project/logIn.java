@@ -122,7 +122,7 @@ public class logIn extends AppCompatActivity {
 
 
                             startActivity(new Intent(logIn.this, Dashboard.class));
-                            //finish();
+                            finish();
 
                         } else {
                             progressDialog.dismiss();

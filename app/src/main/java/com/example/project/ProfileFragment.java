@@ -181,6 +181,8 @@ public class ProfileFragment extends Fragment {
 
         return view;
     }
+
+
     private boolean checkStoragePermission(){
 
         boolean result = ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -325,24 +327,28 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 //handle dialog item clicks
-                if (i == 0) {
-                    //Camera clicked
-                    if (!checkCameraPermission()){
+                if(i == 0){
+
+                    if(!checkCameraPermission()){
                         requestCameraPermission();
-                    }else {
+                    }
+                    else{
                         pickFromCamera();
                     }
 
-                    showImagePicDialog();
-                } else if (i == 1) {
-                    //Gallery clicks
-                    if (!checkCameraPermission()){
-                        requestStoragePermission();
+                }
+                if(i == 1){
+                    if(!checkStoragePermission()){
+
                     }
-                }else {
-                    pickFromGallery();
+                    else{
+
+                        pickFromGallery();
+                    }
+
                 }
             }
+
         });
         //createand show dialog
         builder.create().show();
@@ -356,8 +362,8 @@ public class ProfileFragment extends Fragment {
                 //cam pick, 1st check if camera and storage permissions allowed or not
                 if (grantResults.length > 0){
                     boolean cameraAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    boolean writeStorageAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
-                    if (cameraAccepted && writeStorageAccepted){
+                    boolean StorageAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                    if (cameraAccepted && StorageAccepted){
                         //permissions enabled
                         pickFromCamera();
                     }
@@ -374,8 +380,8 @@ public class ProfileFragment extends Fragment {
                 //cam pick, 1st check if gallery permissions allowed or not
                 if (grantResults.length > 0){
                     boolean cameraAccepted = grantResults[0] == PackageManager.PERMISSION_GRANTED;
-                    boolean writeStorageAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
-                    if (writeStorageAccepted){
+                    boolean StorageAccepted = grantResults[1] == PackageManager.PERMISSION_GRANTED;
+                    if (StorageAccepted){
                         //permissions enabled
                         pickFromGallery();
                     }
@@ -494,7 +500,7 @@ public class ProfileFragment extends Fragment {
         //pick from gallery
         Intent galleryIntent = new Intent(Intent.ACTION_PICK);
         galleryIntent.setType("image/*");
-        startActivityForResult(galleryIntent, IMAGE_PICK_CAMERA_CODE);
+        startActivityForResult(galleryIntent, IMAGE_PICK_GALLERY_CODE);
 
 
     }

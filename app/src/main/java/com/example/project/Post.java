@@ -525,7 +525,7 @@ public class Post extends AppCompatActivity {
                             image_rui = null;
 
                             startActivity(new Intent(Post.this, Dashboard.class ));
-
+                            finish();
 
                         }
                     })
