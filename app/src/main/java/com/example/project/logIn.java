@@ -20,6 +20,10 @@ import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
 
 public class logIn extends AppCompatActivity {
     EditText nEmail, nPwd;
@@ -81,6 +85,7 @@ public class logIn extends AppCompatActivity {
 
     }
 
+
     private void logInUser(String email, String password) {
         progressDialog.show();
         mAuth.signInWithEmailAndPassword(email, password)
@@ -91,6 +96,31 @@ public class logIn extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             progressDialog.dismiss();
                             FirebaseUser user = mAuth.getCurrentUser();
+
+                            if (task.getResult().getAdditionalUserInfo().isNewUser()){
+                                //get user email and uid from auth
+                                String email = user.getEmail();
+                                String uid = user.getUid();
+                                //when user is registered store user info in firebase realtime database too
+                                //using HashMap
+                                HashMap<Object, String> hashMap = new HashMap<>();
+                                //put info in hashmap
+                                hashMap.put("email",email);
+                                hashMap.put("uid", uid);
+                                hashMap.put("name", "");
+                                hashMap.put("phone", "");
+                                hashMap.put("image", "");
+                                hashMap.put("cover", "");
+                                //firebase database isntance
+                                FirebaseDatabase database = FirebaseDatabase.getInstance();
+                                //path to store user data named 'Users'
+                                DatabaseReference reference = database.getReference("Users");
+                                //put data within hashmap in database
+                                reference.child(uid).setValue(hashMap);
+                            }
+
+
+
                             startActivity(new Intent(logIn.this, Dashboard.class));
                             //finish();
 
@@ -116,6 +146,8 @@ public class logIn extends AppCompatActivity {
 
     public boolean onSupportNavigateup()
     {
+        onBackPressed();//go prevois activity
         return super.onSupportNavigateUp();
     }
+
 }

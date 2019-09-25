@@ -100,26 +100,29 @@ public class Register extends AppCompatActivity {
                             // Sign in success, update UI with the signed-in user's information
                             progressDialog.dismiss();
                             FirebaseUser user = mAuth.getCurrentUser();
+                            //get user email and uid from auth
                             String email = user.getEmail();
-                            String Uid = user.getUid();
-
+                            String uid = user.getUid();
+                            //when user is registered store user info in firebase realtime database too
+                            //using HashMap
                             HashMap<Object, String> hashMap = new HashMap<>();
-                            hashMap.put("email", email);
-                            hashMap.put("uid", Uid);
+                            //put info in hashmap
+                            hashMap.put("email",email);
+                            hashMap.put("uid", uid);
                             hashMap.put("name", "");
+                            hashMap.put("phone", "");
                             hashMap.put("image", "");
-
+                            hashMap.put("cover", "");
+                            //firebase database isntance
                             FirebaseDatabase database = FirebaseDatabase.getInstance();
-
+                            //path to store user data named 'Users'
                             DatabaseReference reference = database.getReference("Users");
-                            reference.child(Uid).setValue(hashMap);
+                            //put data within hashmap in database
+                            reference.child(uid).setValue(hashMap);
 
-
-
-
-                            //Toast.makeText(Register.this, "Authentication failed..\n"+user.getEmail(),
-                            startActivity(new Intent(Register.this, Dashboard.class ));
-                            //finish();
+                            Toast.makeText(Register.this, "Registerd..\n"+user.getEmail(), Toast.LENGTH_SHORT).show();
+                            startActivity(new Intent(Register.this, Dashboard.class));
+                            finish();
 
                         } else {
                             // If sign in fails, display a message to the user.
@@ -139,7 +142,14 @@ public class Register extends AppCompatActivity {
         });
 
     }
+
     public boolean onSupportNavigateup(){
+        onBackPressed();//go prevois activity
         return super.onSupportNavigateUp();
     }
+
+
+
+
 }
+

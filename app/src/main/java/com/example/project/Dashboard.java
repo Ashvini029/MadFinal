@@ -25,7 +25,7 @@ public class Dashboard extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_dashboard);
-         actionBar = getSupportActionBar();
+        actionBar = getSupportActionBar();
         actionBar.setTitle("Profile");
 
         firebaseAuth = FirebaseAuth.getInstance();
@@ -45,24 +45,38 @@ public class Dashboard extends AppCompatActivity {
             new BottomNavigationView.OnNavigationItemSelectedListener() {
                 @Override
                 public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-                    switch (menuItem.getGroupId()){
+                    //handle item clicks
+                    switch (menuItem.getItemId()){
                         case R.id.nav_home:
                             actionBar.setTitle("Home");
                             HomeFragment fragment1 = new HomeFragment();
                             FragmentTransaction ft1 = getSupportFragmentManager().beginTransaction();
                             ft1.replace(R.id.content, fragment1,"");
                             ft1.commit();
-                        return true;
+                            return true;
                         case R.id.nav_profile:
-                        return true;
-                        case R.id.nav_users:
-                        return true;
-                    }
 
+                            actionBar.setTitle("Profile");
+                            ProfileFragment fragment2 = new ProfileFragment();
+                            FragmentTransaction ft2 = getSupportFragmentManager().beginTransaction();
+                            ft2.replace(R.id.content, fragment2,"");
+                            ft2.commit();
+                            return true;
+                        case R.id.nav_users:
+
+                            actionBar.setTitle("Users");
+                            UserFragment fragment3 = new UserFragment();
+                            FragmentTransaction ft3 = getSupportFragmentManager().beginTransaction();
+                            ft3.replace(R.id.content, fragment3,"");
+                            ft3.commit();
+                            return true;
+
+                    }
 
                     return false;
                 }
             };
+
 
     private  void checkUserStatus(){
         FirebaseUser user = firebaseAuth.getCurrentUser();
@@ -99,4 +113,3 @@ public class Dashboard extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 }
-
