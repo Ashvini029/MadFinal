@@ -1,6 +1,7 @@
 package com.example.project;
 
 import android.content.Context;
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,8 +39,10 @@ public class AdapterUser extends RecyclerView.Adapter<AdapterUser.MyHolders>{
     }
 
     @Override
-    public void onBindViewHolder(@NonNull MyHolders myHolders, int i) {
+    public void onBindViewHolder(@NonNull MyHolders myHolders, final int i) {
+
         //get data
+        final String hisUID = userList.get(i).getUid();
         String userImage = userList.get(i).getImage();
         String userName = userList.get(i).getName();
         final String userEmail = userList.get(i).getEmail();
@@ -60,6 +63,11 @@ public class AdapterUser extends RecyclerView.Adapter<AdapterUser.MyHolders>{
             @Override
             public void onClick(View view) {
                 Toast.makeText(context, ""+userEmail, Toast.LENGTH_SHORT).show();
+
+                //connect user to chat
+                Intent intent = new Intent(context, ChatActivity.class);
+                intent.putExtra("hidUid", hisUID);
+                context.startActivity(intent);
             }
         });
     }
@@ -86,3 +94,4 @@ public class AdapterUser extends RecyclerView.Adapter<AdapterUser.MyHolders>{
         }
     }
 }
+

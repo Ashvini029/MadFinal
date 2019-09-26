@@ -89,7 +89,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
         holder.Pdesc.setText(pDesc);
         holder.Plike.setText(pLikes +"Likes");
 
-        //setLikes(holder, pId);
+        setLikes(holder, pId);
 
         try {
             Picasso.get().load(uDp).placeholder(R.drawable.ic_action_image).into(holder.uPicture);
@@ -120,7 +120,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
                 showMoreOptions(holder.moreBtn, uid, myUid, pId, pImage);
             }
         });
-        /*holder.likeBtn.setOnClickListener(new View.OnClickListener() {
+        holder.likeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 final int pLikes = Integer.parseInt(postList.get(position).getpLikes());
@@ -159,7 +159,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
                 });
 
             }
-        });*/
+        });
 
         holder.comBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -178,7 +178,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
 
     }
 
-   /* private void setLikes(final MyHolder myholder, final String postkey) {
+    private void setLikes(final MyHolder myholder, final String postkey) {
         likesRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
@@ -205,7 +205,7 @@ public class adapterPost extends RecyclerView.Adapter<adapterPost.MyHolder> {
         });
 
 
-    }*/
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void showMoreOptions(ImageButton moreBtn, String uid, String myUid, final String pId, final String pImage) {

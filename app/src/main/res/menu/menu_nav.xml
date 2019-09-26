@@ -13,6 +13,10 @@
         android:icon="@drawable/ic_action_prooo"/>
     <item
         android:id="@+id/nav_users"
-        android:title="Search"
+        android:title="Users"
         android:icon="@drawable/ic_action_user"/>
+    <item
+        android:id="@+id/nav_chats"
+        android:title="Chats"
+        android:icon="@drawable/ic_chat_black"/>
 </menu>
